@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake</title>
+</head>
+<body>
+  <canvas id="mycanvas"></canvas>
+  <script>
+    canvas = document.querySelector("#mycanvas")
+    ctx = canvas.getContext("2d")
+    body = document.querySelector("body")
+
+    body.style.backgroundColor = "gray"
+    body.style.height = "900px"
+    body.style.display = "flex"
+    body.style.justifyContent = "center"
+    body.style.alignItems = "center"
+
+    canvas.width = 500
+    canvas.height = 700
+    canvas.style.backgroundColor = "black"
+
+    SNAKE_DIRECTION_UP = "up"
+    SNAKE_DIRECTION_DOWN = "down"
+    SNAKE_DIRECTION_LEFT = "left"
+    SNAKE_DIRECTION_RIGHT = "right"
+
+    CANVAS_WALL_TOP = 0
+    CANVAS_WALL_BOTTOM = canvas.height
+    CANVAS_WALL_LEFT = 0
+    CANVAS_WALL_RIGHT = canvas.width
+
+    TILE_SIZE = 10
+
+    TICK_RATE = 1000/60 // 60fps
+
+    snake = {
+      x: canvas.width / 4,
+      y: canvas.height / 2,
+      height: TILE_SIZE,
+      width: TILE_SIZE,
+      direction: SNAKE_DIRECTION_RIGHT,
+      speed: 1,
+      tail: [],
+      tailLength: TILE_SIZE,
+      draw: function() {
+        ctx.fillStyle = "green"
+        // ctx.fillRect(this.x, this.y , this.height, this.width)
+        for (var i = 0; i < this.tail.length; i++) {
+          ctx.fillRect(this.tail[i].x, this.tail[i].y, this.height, this.width)
+        }
+        snake.move()
+      },
+      move: function() {
+        if (this.direction == SNAKE_DIRECTION_UP) {
+          this.y -= this.speed
+        } else if (this.direction == SNAKE_DIRECTION_DOWN) {
+          this.y += this.speed
+        } else if (this.direction == SNAKE_DIRECTION_LEFT) {
+          this.x -= this.speed
+        } else if (this.direction == SNAKE_DIRECTION_RIGHT) {
+          this.x += this.speed
+        }
+
+        if (this.x < CANVAS_WALL_LEFT) {
+          alert("You lost!")
+          reset()
+        } 
+        if (this.x + this.width/2 > CANVAS_WALL_RIGHT) {
+          alert("You lost!")
+          reset()
+        } 
+        if (this.y < CANVAS_WALL_TOP) {
+          alert("You lost!")
+          reset()
+        } 
+        if (this.y + this.height/2 > CANVAS_WALL_BOTTOM) {
+          alert("You lost!")
+          reset()
+        }
+
+        this.tail.push({
+          x: this.x,
+          y: this.y
+        })
+        if (this.tail.length > this.tailLength) {
+          this.tail.shift()
+        }
+      },
+      changeDirection: function(direction) {
+        if (direction == SNAKE_DIRECTION_UP && this.direction != SNAKE_DIRECTION_DOWN) {
+          this.direction = SNAKE_DIRECTION_UP
+        } else if (direction == SNAKE_DIRECTION_DOWN && this.direction != SNAKE_DIRECTION_UP) {
+          this.direction = SNAKE_DIRECTION_DOWN
+        } else if (direction == SNAKE_DIRECTION_LEFT && this.direction != SNAKE_DIRECTION_RIGHT) {
+          this.direction = SNAKE_DIRECTION_LEFT
+        } else if (direction == SNAKE_DIRECTION_RIGHT && this.direction != SNAKE_DIRECTION_LEFT) {
+          this.direction = SNAKE_DIRECTION_RIGHT
+        }
+      }
+    }
+
+    food = {
+      x: 0,
+      y: 0,
+      height: TILE_SIZE,
+      width: TILE_SIZE,
+      draw: function() {
+        ctx.fillStyle = "red"
+        ctx.fillRect(this.x, this.y, this.height, this.width)
+
+        if (food.x < CANVAS_WALL_TOP) {
+          initFood()
+        } else if (food.x + food.width > CANVAS_WALL_RIGHT) {
+          initFood()
+        } else if (food.y < CANVAS_WALL_TOP) {
+          initFood()
+        } else if (food.y + food.height > CANVAS_WALL_BOTTOM) {
+          initFood()
+        }
+      }
+    }
+
+    function keyPress(e) {
+      if (e.key == "w" || e.key == "ArrowUp") {
+        snake.changeDirection(SNAKE_DIRECTION_UP)
+      } else if (e.key == "s" || e.key == "ArrowDown") {
+        snake.changeDirection(SNAKE_DIRECTION_DOWN)
+      } else if (e.key == "a" || e.key == "ArrowLeft") {
+        snake.changeDirection(SNAKE_DIRECTION_LEFT)
+      } else if (e.key == "d" || e.key == "ArrowRight") {
+        snake.changeDirection(SNAKE_DIRECTION_RIGHT)
+      }
+    }
+
+    function random(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    }
+
+    function initFood() {
+      food.x = random(0, canvas.width / 10) * 10
+      food.y = random(0, canvas.height / 10) * 10
+    }
+
+    function colision() {
+      foodRealWidth = food.x + food.width
+      foodRealHeight = food.y + food.height
+      snakeRealWidth = snake.x + snake.width
+      snakeRealHeight = snake.y + snake.height
+
+      if (foodRealWidth >= snake.x && food.x <= snakeRealWidth && foodRealHeight >= snake.y && food.y <= snakeRealHeight) {
+        snake.tailLength += TILE_SIZE
+        initFood()
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      snake.draw()
+      food.draw()
+      colision()
+    }
+
+    function reset(){
+      snake.x = canvas.width / 4
+      snake.y = canvas.height / 2
+      snake.tail = []
+      snake.tailLength = TILE_SIZE
+      snake.direction = SNAKE_DIRECTION_RIGHT
+      initFood()
+    }
+    
+    function update() {
+      document.addEventListener("keydown", keyPress)
+      draw()
+    }
+    initFood()
+
+    setInterval(update, TICK_RATE)
+
+  </script>  
+</body>
+</html>
